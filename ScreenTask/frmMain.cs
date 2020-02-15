@@ -40,6 +40,10 @@ namespace ScreenTask
             isPrivateTask = false;
             isPreview = false;
             isMouseCapture = false;
+
+            var deviceNames = ScreenFunctions.DeviceNames();
+
+            ScreenCombo.Items.AddRange(deviceNames.ToArray());
         }
 
         private async void btnStartServer_Click(object sender, EventArgs e)
@@ -214,11 +218,17 @@ namespace ScreenTask
 
             }
         }
+
+        private ScreenAcquireInfo ScreenInfo = new ScreenAcquireInfo {ScreenCaptureStyle = ScreenCaptureStyle.CaptureFullScreen};
+
         private void TakeScreenshot(bool captureMouse)
         {
+            Rectangle captureBounds = ScreenFunctions.GetScreenBounds(ScreenInfo);
+
             if (captureMouse)
             {
-                var bmp = ScreenCapturePInvoke.CaptureFullScreen(true);
+                var bmp = ScreenCapturePInvoke.CaptureScreen(captureBounds, true);
+
                 rwl.AcquireWriterLock(Timeout.Infinite);
                 bmp.Save(Application.StartupPath + "/WebServer" + "/ScreenTask.jpg", ImageFormat.Jpeg);
                 rwl.ReleaseWriterLock();
@@ -230,12 +240,12 @@ namespace ScreenTask
                 }
                 return;
             }
-            Rectangle bounds = Screen.GetBounds(Point.Empty);
-            using (Bitmap bitmap = new Bitmap(bounds.Width, bounds.Height))
+
+            using (Bitmap bitmap = new Bitmap(captureBounds.Width, captureBounds.Height))
             {
                 using (Graphics g = Graphics.FromImage(bitmap))
                 {
-                    g.CopyFromScreen(Point.Empty, Point.Empty, bounds.Size);
+                    g.CopyFromScreen(new Point(captureBounds.Left, captureBounds.Top), Point.Empty, captureBounds.Size);
                 }
                 rwl.AcquireWriterLock(Timeout.Infinite);
                 bitmap.Save(Application.StartupPath + "/WebServer" + "/ScreenTask.jpg", ImageFormat.Jpeg);
@@ -436,6 +446,30 @@ namespace ScreenTask
             Process.Start("https://github.com/EslaMx7/ScreenTask");
         }
 
+        private void ScreenCombo_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            double scalingFactor;
+            if (!Double.TryParse(ScalingFactorText.Text, out scalingFactor))
+            {
+                scalingFactor = 1.0;
+            }
 
+            if (ScreenCombo.Text == "All Screens")
+            {
+                ScreenInfo = new ScreenAcquireInfo {ScreenCaptureStyle = ScreenCaptureStyle.CaptureFullScreen};
+            }
+            else if (ScreenCombo.Text == "Primary Screen")
+            {
+                ScreenInfo = new ScreenAcquireInfo { ScreenCaptureStyle = ScreenCaptureStyle.CapturePrimaryScreen, ScalingFactor = scalingFactor};
+            }
+            else
+            {
+                ScreenInfo = new ScreenAcquireInfo
+                {
+                    DeviceName = ScreenCombo.Text, ScalingFactor = scalingFactor,
+                    ScreenCaptureStyle = ScreenCaptureStyle.CaptureIndividualScreen
+                };
+            }
+        }
     }
 }

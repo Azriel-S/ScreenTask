@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -36,22 +37,6 @@ namespace ScreenTask
         private const Int32 CURSOR_SHOWING = 0x0001;
         private const Int32 DI_NORMAL = 0x0003;
 
-        public static Bitmap CaptureFullScreen(bool captureMouse)
-        {
-            var allBounds = Screen.AllScreens.Select(s => s.Bounds).ToArray();
-            Rectangle bounds = Rectangle.FromLTRB(allBounds.Min(b => b.Left), allBounds.Min(b => b.Top), allBounds.Max(b => b.Right), allBounds.Max(b => b.Bottom));
-
-            var bitmap = CaptureScreen(bounds, captureMouse);
-            return bitmap;
-        }
-
-        public static Bitmap CapturePrimaryScreen(bool captureMouse)
-        {
-            Rectangle bounds = Screen.PrimaryScreen.Bounds;
-
-            var bitmap = CaptureScreen(bounds, captureMouse);
-            return bitmap;
-        }
 
         public static Bitmap CaptureScreen(Rectangle bounds, bool captureMouse)
         {
